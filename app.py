@@ -12,10 +12,17 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 UPLOAD_FOLDER = "static"
 
+# Ensure static directory exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Prepare color mapping from HEX to name
+hex_to_name = {v: k for k, v in webcolors.CSS3_NAMES_TO_HEX.items()}
+
 def closest_color(requested_color):
     min_dist = float('inf')
     closest_name = None
-    for hex_code, name in webcolors.CSS3_HEX_TO_NAMES.items():
+    for hex_code, name in hex_to_name.items():
         r, g, b = webcolors.hex_to_rgb(hex_code)
         dist = (r - requested_color[0])**2 + (g - requested_color[1])**2 + (b - requested_color[2])**2
         if dist < min_dist:
@@ -81,8 +88,12 @@ def index():
             if file.filename != '':
                 filename = secure_filename(file.filename)
                 path = os.path.join(UPLOAD_FOLDER, filename)
-                file.save(path)
 
+                # Ensure static/ exists
+                if not os.path.exists(UPLOAD_FOLDER):
+                    os.makedirs(UPLOAD_FOLDER)
+
+                file.save(path)
                 image = cv2.imread(path)
                 legend = analyze_colors(image, num_colors)
                 output_img = 'static/labeled_output.jpg'
